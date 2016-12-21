@@ -72,11 +72,18 @@ class Session {
 			clearTimeout(this._infoTimeout);
 		}
 		this._infoTimeout = setTimeout(() => {
-			if (this.onWordInfo) {
-				this.onWordInfo(values);
+			if (this.onTokenInfo) {
+				this.onTokenInfo(values);
 			}
 		}, 1000);
 	}
+}
+function Loader(props) {
+	return React.createElement(
+		'div',
+		{ className: 'loader' },
+		'Loading'
+	);
 }
 function Editor(props) {
 	return React.createElement(
@@ -105,6 +112,7 @@ class Analyzer extends React.Component {
 		this.state = {
 			tokens: [],
 			loading: true,
+			infoToken: null,
 			tokenInfo: null
 		};
 		this._sess = null;
@@ -127,14 +135,15 @@ class Analyzer extends React.Component {
 		this._sess.disconnect();
 	}
 
-	handleTokenClick(i) {
-		alert('clicked token ' + i);
+	handleTokenClick(i, token) {
+		this.setState({ infoToken: token.data, tokenInfo: null });
+		this._sess.requestTokenInfo(i);
 	}
 
 	render() {
 		const tokens = [];
 		this.state.tokens.forEach((item, i) => {
-			tokens.push(React.createElement(Token, { onClick: () => this.handleTokenClick(i),
+			tokens.push(React.createElement(Token, { onClick: () => this.handleTokenClick(i, item),
 				info: item, key: i }));
 		});
 		return React.createElement(
@@ -148,10 +157,43 @@ class Analyzer extends React.Component {
 			React.createElement(
 				'div',
 				{ className: 'tokens' },
-				tokens
-			)
+				tokens,
+				this.state.loading ? React.createElement(
+					'div',
+					{ className: 'corner-item' },
+					React.createElement(Loader, { key: 'loader' })
+				) : null
+			),
+			React.createElement(TokenPane, { token: this.state.infoToken, info: this.state.tokenInfo,
+				onClose: () => this.setState({ infoToken: null }) })
 		);
 	}
+}
+
+function TokenPane(props) {
+	if (!props.token) {
+		return null;
+	}
+	var loader = React.createElement(Loader, null);
+	var list = React.createElement(
+		'label',
+		null,
+		'TODO: list of things'
+	);
+	return React.createElement(
+		'div',
+		{ className: 'token-pane', onClick: props.onClose },
+		React.createElement(
+			'div',
+			{ className: 'pane-contents' },
+			React.createElement(
+				'label',
+				{ className: 'showing-token' },
+				props.token
+			),
+			!props.info ? loader : list
+		)
+	);
 }
 
 function Token(props) {

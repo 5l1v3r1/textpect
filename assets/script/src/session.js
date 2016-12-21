@@ -72,8 +72,8 @@ class Session {
 			clearTimeout(this._infoTimeout);
 		}
 		this._infoTimeout = setTimeout(() => {
-			if (this.onWordInfo) {
-				this.onWordInfo(values);
+			if (this.onTokenInfo) {
+				this.onTokenInfo(values);
 			}
 		}, 1000);
 	}

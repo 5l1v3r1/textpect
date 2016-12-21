@@ -1,0 +1,32 @@
+@pane-width: 200px;
+@pane-height: 220px;
+
+.token-pane {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+
+	.pane-contents {
+		box-sizing: border-box;
+		padding: 5px;
+		background-color: white;
+		position: absolute;
+		top: calc(~"50% -"(@pane-height/2));
+		left: calc(~"50% -"(@pane-width/2));
+		width: @pane-width;
+		height: @pane-height;
+		font-size: 0;
+
+		& > label {
+			font-size: 16px;
+		}
+	}
+
+	.showing-token {
+		display: block;
+		text-align: center;
+	}
+}

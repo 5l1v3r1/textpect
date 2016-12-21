@@ -8,12 +8,26 @@
 
 	.tokens {
 		.editor-sizing();
+		min-height: @editor-height;
+		height: auto;
+
+		position: relative;
 		display: inline-block;
-		padding: 5px;
+		padding: @editor-padding;
 		margin: (@editor-min-margin / 2) 0;
 		text-align: left;
 		background-color: #edf3ff;
 		font-size: @editor-font-size;
+
+		.corner-item {
+			position: absolute;
+			top: @editor-padding;
+			right: @editor-padding;
+
+			.loader {
+				display: block;
+			}
+		}
 	}
 
 	.token {

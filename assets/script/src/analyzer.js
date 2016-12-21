@@ -6,6 +6,7 @@ class Analyzer extends React.Component {
 		this.state = {
 			tokens: [],
 			loading: true,
+			infoToken: null,
 			tokenInfo: null
 		};
 		this._sess = null;
@@ -28,14 +29,15 @@ class Analyzer extends React.Component {
 		this._sess.disconnect();
 	}
 
-	handleTokenClick(i) {
-		alert('clicked token ' + i);
+	handleTokenClick(i, token) {
+		this.setState({infoToken: token.data, tokenInfo: null});
+		this._sess.requestTokenInfo(i);
 	}
 
 	render() {
 		const tokens = [];
 		this.state.tokens.forEach((item, i) => {
-			tokens.push(<Token onClick={() => this.handleTokenClick(i)}
+			tokens.push(<Token onClick={() => this.handleTokenClick(i, item)}
 			                   info={item} key={i} />);
 		});
 		return (
@@ -43,10 +45,30 @@ class Analyzer extends React.Component {
 				<h1>Analyzer</h1>
 				<div className="tokens">
 					{tokens}
+					{this.state.loading ?
+						<div className="corner-item"><Loader key="loader" /></div> : null}
 				</div>
+				<TokenPane token={this.state.infoToken} info={this.state.tokenInfo}
+				           onClose={() => this.setState({infoToken: null})}/>
 			</div>
 		)
 	}
+}
+
+function TokenPane(props) {
+	if (!props.token) {
+		return null;
+	}
+	var loader = <Loader />;
+	var list = <label>TODO: list of things</label>;
+	return (
+		<div className="token-pane" onClick={props.onClose}>
+			<div className="pane-contents">
+				<label className="showing-token">{props.token}</label>
+				{(!props.info ? loader : list)}
+			</div>
+		</div>
+	)
 }
 
 function Token(props) {
