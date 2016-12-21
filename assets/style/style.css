@@ -14,6 +14,16 @@ button {
 button:hover {
   background-color: #2e8ba5;
 }
+.editor-sizing {
+  box-sizing: border-box;
+  width: 500px;
+  height: 200px;
+}
+@media (max-width: 520px) {
+  .editor-sizing {
+    width: calc(100% -  20px);
+  }
+}
 .editor {
   text-align: center;
 }
@@ -22,6 +32,8 @@ button:hover {
   margin: 0;
 }
 .editor textarea {
+  width: 500px;
+  height: 200px;
   padding: 5px;
   margin: 10px 0;
   font-family: sans-serif;
@@ -29,8 +41,6 @@ button:hover {
   resize: none;
   border: 1px solid #d5d5d5;
   box-sizing: border-box;
-  width: 500px;
-  height: 200px;
 }
 @media (max-width: 520px) {
   .editor textarea {
@@ -42,4 +52,27 @@ button:hover {
 }
 .analyzer {
   text-align: center;
+}
+.analyzer h1 {
+  margin: 0;
+  padding: 0;
+}
+.analyzer .tokens {
+  box-sizing: border-box;
+  width: 500px;
+  height: 200px;
+  display: inline-block;
+  padding: 5px;
+  margin: 10px 0;
+  text-align: left;
+  background-color: #edf3ff;
+  font-size: 18px;
+}
+@media (max-width: 520px) {
+  .analyzer .tokens {
+    width: calc(100% -  20px);
+  }
+}
+.analyzer .token {
+  border-bottom: 3px solid;
 }
