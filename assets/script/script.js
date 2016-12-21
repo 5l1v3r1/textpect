@@ -164,36 +164,75 @@ class Analyzer extends React.Component {
 					React.createElement(Loader, { key: 'loader' })
 				) : null
 			),
-			React.createElement(TokenPane, { token: this.state.infoToken, info: this.state.tokenInfo,
+			React.createElement(TokenPane, { info: this.state.tokenInfo, token: this.state.infoToken,
 				onClose: () => this.setState({ infoToken: null }) })
 		);
 	}
 }
 
-function TokenPane(props) {
-	if (!props.token) {
-		return null;
+class TokenPane extends React.Component {
+	constructor() {
+		super();
+		this._pressHandler = e => {
+			if (e.which === 27) {
+				this.props.onClose();
+			}
+		};
 	}
-	var loader = React.createElement(Loader, null);
-	var list = React.createElement(
-		'label',
-		null,
-		'TODO: list of things'
-	);
-	return React.createElement(
-		'div',
-		{ className: 'token-pane', onClick: props.onClose },
-		React.createElement(
+
+	componentDidMount() {
+		window.addEventListener('keydown', this._pressHandler);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('keydown', this._pressHandler);
+	}
+
+	render() {
+		const props = this.props;
+		if (!props.token) {
+			return null;
+		}
+		const loader = React.createElement(Loader, null);
+		const list = [];
+		if (props.info) {
+			props.info.suggs.forEach((sugg, i) => {
+				const p = props.info.suggProbs[i];
+				list.push(React.createElement(
+					'li',
+					{ key: i },
+					React.createElement(
+						'label',
+						{ className: 'suggestion' },
+						sugg
+					),
+					React.createElement(
+						'label',
+						{ className: 'probability' },
+						(p * 100).toFixed(2) + '%'
+					)
+				));
+			});
+		}
+		return React.createElement(
 			'div',
-			{ className: 'pane-contents' },
+			{ className: 'token-pane', onClick: props.onClose },
 			React.createElement(
-				'label',
-				{ className: 'showing-token' },
-				props.token
-			),
-			!props.info ? loader : list
-		)
-	);
+				'div',
+				{ className: 'pane-contents', onClick: e => e.stopPropagation() },
+				React.createElement(
+					'h1',
+					null,
+					'Alternatives'
+				),
+				!props.info ? loader : React.createElement(
+					'ul',
+					null,
+					list
+				)
+			)
+		);
+	}
 }
 
 function Token(props) {

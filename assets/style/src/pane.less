@@ -1,5 +1,8 @@
+@pane-padding: 5px;
+@pane-item-height: 30px;
 @pane-width: 200px;
-@pane-height: 220px;
+@pane-row-count: 6;
+@pane-height: @pane-item-height*(@pane-row-count+1) + @pane-padding*2 + @pane-row-count;
 
 .token-pane {
 	position: fixed;
@@ -9,24 +12,68 @@
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.5);
 
+	.pane-item {
+		height: @pane-item-height;
+		line-height: @pane-item-height;
+	}
+
 	.pane-contents {
 		box-sizing: border-box;
-		padding: 5px;
+		padding: @pane-padding 0;
 		background-color: white;
 		position: absolute;
 		top: calc(~"50% -"(@pane-height/2));
 		left: calc(~"50% -"(@pane-width/2));
 		width: @pane-width;
 		height: @pane-height;
+		text-align: left;
+
+		/* Small font prevents unwanted space around loader. */
 		font-size: 0;
 
-		& > label {
+		& > label, & > ul {
 			font-size: 16px;
 		}
 	}
 
-	.showing-token {
+	.loader {
+		position: absolute;
+		left: calc(~"50% - "(@loader-size/2));
+	}
+
+	h1 {
+		.pane-item();
 		display: block;
 		text-align: center;
+		margin: 0;
+		padding: 0;
+		font-size: 16px;
+	}
+
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	li {
+		.pane-item();
+		margin: 0;
+		padding: 0 @pane-padding;
+		border-top: 1px solid #d5d5d5;
+
+		.suggestion {
+			float: left;
+		}
+
+		.probability {
+			float: right;
+		}
+
+		&::after {
+			content: '';
+			display: block;
+			clear: both;
+		}
 	}
 }

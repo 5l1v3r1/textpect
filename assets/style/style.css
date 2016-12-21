@@ -116,21 +116,60 @@ button:hover {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
 }
+.token-pane .pane-item {
+  height: 30px;
+  line-height: 30px;
+}
 .token-pane .pane-contents {
   box-sizing: border-box;
-  padding: 5px;
+  padding: 5px 0;
   background-color: white;
   position: absolute;
-  top: calc(50% - 110px);
+  top: calc(50% - 113px);
   left: calc(50% - 100px);
   width: 200px;
-  height: 220px;
+  height: 226px;
+  text-align: left;
+  /* Small font prevents unwanted space around loader. */
   font-size: 0;
 }
-.token-pane .pane-contents > label {
+.token-pane .pane-contents > label,
+.token-pane .pane-contents > ul {
   font-size: 16px;
 }
-.token-pane .showing-token {
+.token-pane .loader {
+  position: absolute;
+  left: calc(50% -  10px);
+}
+.token-pane h1 {
+  height: 30px;
+  line-height: 30px;
   display: block;
   text-align: center;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+}
+.token-pane ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.token-pane li {
+  height: 30px;
+  line-height: 30px;
+  margin: 0;
+  padding: 0 5px;
+  border-top: 1px solid #d5d5d5;
+}
+.token-pane li .suggestion {
+  float: left;
+}
+.token-pane li .probability {
+  float: right;
+}
+.token-pane li::after {
+  content: '';
+  display: block;
+  clear: both;
 }

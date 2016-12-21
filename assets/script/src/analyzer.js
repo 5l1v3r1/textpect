@@ -48,27 +48,58 @@ class Analyzer extends React.Component {
 					{this.state.loading ?
 						<div className="corner-item"><Loader key="loader" /></div> : null}
 				</div>
-				<TokenPane token={this.state.infoToken} info={this.state.tokenInfo}
+				<TokenPane info={this.state.tokenInfo} token={this.state.infoToken}
 				           onClose={() => this.setState({infoToken: null})}/>
 			</div>
 		)
 	}
 }
 
-function TokenPane(props) {
-	if (!props.token) {
-		return null;
+class TokenPane extends React.Component {
+	constructor() {
+		super();
+		this._pressHandler = (e) => {
+			if (e.which === 27) {
+				this.props.onClose();
+			}
+		};
 	}
-	var loader = <Loader />;
-	var list = <label>TODO: list of things</label>;
-	return (
-		<div className="token-pane" onClick={props.onClose}>
-			<div className="pane-contents">
-				<label className="showing-token">{props.token}</label>
-				{(!props.info ? loader : list)}
+
+	componentDidMount() {
+		window.addEventListener('keydown', this._pressHandler);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('keydown', this._pressHandler);
+	}
+
+	render() {
+		const props = this.props;
+		if (!props.token) {
+			return null;
+		}
+		const loader = <Loader />;
+		const list = [];
+		if (props.info) {
+			props.info.suggs.forEach((sugg, i) => {
+				const p = props.info.suggProbs[i];
+				list.push(
+					<li key={i}>
+						<label className="suggestion">{sugg}</label>
+						<label className="probability">{(p*100).toFixed(2)+'%'}</label>
+					</li>
+				);
+			});
+		}
+		return (
+			<div className="token-pane" onClick={props.onClose}>
+				<div className="pane-contents" onClick={(e) => e.stopPropagation()}>
+					<h1>Alternatives</h1>
+					{(!props.info ? loader : <ul>{list}</ul>)}
+				</div>
 			</div>
-		</div>
-	)
+		)
+	}
 }
 
 function Token(props) {
