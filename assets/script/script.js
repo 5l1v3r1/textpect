@@ -9,6 +9,7 @@ function Editor(props) {
 		),
 		React.createElement("textarea", { onChange: e => props.onChange(e.target.value),
 			value: props.text }),
+		React.createElement("br", null),
 		React.createElement(
 			"button",
 			{ onClick: () => props.onSubmit() },
