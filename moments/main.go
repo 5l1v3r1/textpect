@@ -5,11 +5,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/unixpickle/textpect/analyzer"
 	"github.com/unixpickle/weakai/rnn"
 )
+
+var Probs []float64
 
 func main() {
 	if len(os.Args) != 3 {
@@ -45,8 +48,10 @@ func main() {
 	}
 	mean := sum / float64(count)
 	variance := sqSum/float64(count) - mean*mean
+	sort.Float64s(Probs)
 	fmt.Println("Mean:", mean)
-	fmt.Println("Var: ", variance)
+	fmt.Println("Var:", variance)
+	fmt.Println("Median:", Probs[len(Probs)/2])
 }
 
 func wordProbabilities(b rnn.Block, text string) (count int, sum, sqSum float64) {
@@ -58,6 +63,7 @@ func wordProbabilities(b rnn.Block, text string) (count int, sum, sqSum float64)
 			sum += t.Probability
 			sqSum += t.Probability * t.Probability
 			count++
+			Probs = append(Probs, t.Probability)
 		}
 	}
 	return

@@ -2,76 +2,111 @@ class Session extends EventEmitter {
 	constructor(text) {
 		super();
 
-		// TODO: implement this for real using WebSockets
-		// and a neural network on the back-end.
+		this._tokens = [];
+		this._done = false;
+		this._open = false;
+		this._queryQueue = [];
+		this._queryCb = null;
 
-		this._tokens = dummyTokens(text);
-		this._loadedTokens = 0;
-
-		this._infoTimeout = null;
-		this._interval = setInterval(() => {
-			if (this._loadedTokens >= this._tokens.length) {
-				clearInterval(this._interval);
-				this._interval = null;
-				return;
-			}
-			this._loadedTokens++;
-			this.emit('progress');
-		}, 100);
+		let wsURL = '://' + location.host + '/websocket';
+		if (location.protocol === 'https:') {
+			wsURL = 'wss' + wsURL;
+		} else {
+			wsURL = 'ws' + wsURL;
+		}
+		this._conn = new WebSocket(wsURL, 'protocolOne');
+		this._conn.onerror = () => {
+			this.emit('error', 'Failed to connect.');
+		};
+		this._conn.onopen = () => {
+			this._open = true;
+			this._conn.onerror = null;
+			this._conn.onclose = () => {
+				this._open = false;
+				if (this._queryCb) {
+					this._queryCb('WebSocket closed.', null);
+				}
+				this._queryQueue.forEach((x) => x.cb('WebSocket closed.', null));
+			};
+			this._conn.onmessage = (e) => {
+				if (this._queryCb) {
+					this._queryCb(null, JSON.parse(e.data));
+					this._executeQuery(this._queryQueue.shift());
+				}
+			};
+			this._conn.send(JSON.stringify(text));
+			this._poll();
+		};
 	}
 
 	disconnect() {
-		if (this._interval) {
-			clearInterval(this._interval);
-			this._interval = null;
-		}
-		if (this._infoTimeout) {
-			clearTimeout(this._infoTimeout);
-			this._infoTimeout = null;
-		}
+		this._listeners = {};
+		this._conn.close();
 	}
 
+
 	processedTokens() {
-		const toks = [];
-		for (let i = 0; i < this._loadedTokens; ++i) {
-			toks.push(this._tokens[i]);
-		}
-		return toks;
+		return this._tokens;
 	}
 
 	done() {
-		return this._loadedTokens >= this._tokens.length;
+		return this._done;
 	}
 
 	requestTokenInfo(wordIdx) {
-		const values = {
-			suggs: ['hey', 'there', 'my', 'name', 'is', 'joe'],
-			probs: [0.1, 0.05, 0.03, 0.02, 0.0253, 0.01]
-		};
-		if (this._infoTimeout) {
-			clearTimeout(this._infoTimeout);
-		}
-		this._infoTimeout = setTimeout(() => {
-			this.emit('info', values)
-		}, 1000);
+		const token = Math.random();
+		this._reqToken = token;
+		this._query({type: 'suggest', idx: wordIdx}, (err, obj) => {
+			if (err) {
+				this.emit('infoError', err);
+				return;
+			}
+			if (this._reqToken === token) {
+				this.emit('info', obj);
+			}
+		});
 	}
-}
 
-function dummyTokens(text) {
-	let word = '';
-	const comps = [];
-	for (let i = 0, len = text.length; i <= len; ++i) {
-		const ch = (i === text.length ? ' ' : text[i]);
-		if (ch != ' ' && ch != '\n') {
-			word += ch;
-			continue;
-		}
-		if (word) {
-			comps.push({type: 'word', data: word, prob: Math.random()});
-			word = '';
-		}
-		comps.push({type: 'space', data: ch});
+	_poll() {
+		this._query({type: 'done'}, (err, done) => {
+			if (err) {
+				this.emit('error', err);
+				return;
+			}
+			this._query({type: 'tokens'}, (err, toks) => {
+				if (err) {
+					this.emit('error', err);
+					return;
+				}
+				this._tokens = toks;
+				this._done = done;
+				if (!done) {
+					setTimeout(() => this._poll(), 500);
+				}
+				this.emit('progress');
+			});
+		});
 	}
-	comps.pop();
-	return comps;
+
+	_query(obj, cb) {
+		if (!this._open) {
+			setTimeout(() => cb('WebSocket closed.', null), 0);
+			return;
+		}
+		const info = {obj: obj, cb: cb};
+		if (this._queryCb) {
+			this._queryQueue.push(info);
+		} else {
+			this._executeQuery(info);
+		}
+	}
+
+	_executeQuery(info) {
+		if (!info) {
+			this._queryCb = null;
+			return;
+		}
+		this._queryCb = info.cb;
+		this._conn.send(JSON.stringify(info.obj));
+	}
 }

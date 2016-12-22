@@ -13,7 +13,7 @@ import (
 func suggestions(last byte, s rnn.State, b rnn.Block) ([]string, []float64) {
 	seen := map[string]bool{}
 	samps := samples{}
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		str, prob := sampleWord(last, s, b)
 		if _, ok := seen[str]; !ok {
 			seen[str] = true
