@@ -122,13 +122,13 @@ button:hover {
 }
 .token-pane .pane-contents {
   box-sizing: border-box;
-  padding: 5px 0;
+  padding: 7px 0;
   background-color: white;
   position: absolute;
-  top: calc(50% - 113px);
-  left: calc(50% - 100px);
-  width: 200px;
-  height: 226px;
+  top: calc(50% - 115px);
+  left: calc(50% - 125px);
+  width: 250px;
+  height: 230px;
   text-align: left;
   /* Small font prevents unwanted space around loader. */
   font-size: 0;
@@ -159,7 +159,7 @@ button:hover {
   height: 30px;
   line-height: 30px;
   margin: 0;
-  padding: 0 5px;
+  padding: 0 10px;
   border-top: 1px solid #d5d5d5;
 }
 .token-pane li .suggestion {

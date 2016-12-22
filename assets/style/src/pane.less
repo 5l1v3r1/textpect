@@ -1,8 +1,9 @@
-@pane-padding: 5px;
+@pane-horiz-padding: 10px;
+@pane-vert-padding: 7px;
 @pane-item-height: 30px;
-@pane-width: 200px;
+@pane-width: 250px;
 @pane-row-count: 6;
-@pane-height: @pane-item-height*(@pane-row-count+1) + @pane-padding*2 + @pane-row-count;
+@pane-height: @pane-item-height*(@pane-row-count+1) + @pane-vert-padding*2 + @pane-row-count;
 
 .token-pane {
 	position: fixed;
@@ -19,7 +20,7 @@
 
 	.pane-contents {
 		box-sizing: border-box;
-		padding: @pane-padding 0;
+		padding: @pane-vert-padding 0;
 		background-color: white;
 		position: absolute;
 		top: calc(~"50% -"(@pane-height/2));
@@ -59,7 +60,7 @@
 	li {
 		.pane-item();
 		margin: 0;
-		padding: 0 @pane-padding;
+		padding: 0 @pane-horiz-padding;
 		border-top: 1px solid #d5d5d5;
 
 		.suggestion {
