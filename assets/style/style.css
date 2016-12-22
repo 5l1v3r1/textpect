@@ -133,29 +133,29 @@ button:hover {
   background-color: rgba(0, 0, 0, 0.5);
 }
 .token-pane .pane-item {
-  height: 30px;
-  line-height: 30px;
+  height: 35px;
+  line-height: 35px;
 }
 .token-pane .pane-contents {
   box-sizing: border-box;
   padding: 7px 0;
   background-color: white;
   position: absolute;
-  top: calc(50% - 115px);
+  top: calc(50% - 132.5px);
   left: calc(50% - 125px);
   width: 250px;
-  height: 230px;
+  height: 265px;
   text-align: left;
 }
 .token-pane .loader {
   position: absolute;
   left: 115px;
-  top: 105px;
+  top: 122.5px;
 }
 .token-pane h1,
 .token-pane .error {
-  height: 30px;
-  line-height: 30px;
+  height: 35px;
+  line-height: 35px;
   display: block;
   text-align: center;
   margin: 0;
@@ -171,8 +171,8 @@ button:hover {
   padding: 0;
 }
 .token-pane li {
-  height: 30px;
-  line-height: 30px;
+  height: 35px;
+  line-height: 35px;
   margin: 0;
   padding: 0 10px;
   border-top: 1px solid #d5d5d5;
