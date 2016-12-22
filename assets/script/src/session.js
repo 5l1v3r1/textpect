@@ -1,41 +1,22 @@
-class Session {
+class Session extends EventEmitter {
 	constructor(text) {
+		super();
+
 		// TODO: implement this for real using WebSockets
 		// and a neural network on the back-end.
 
-		this._components = [];
-
-		let word = '';
-		for (let i = 0, len = text.length; i <= len; ++i) {
-			var ch = (i === text.length ? ' ' : text[i]);
-			if (ch != ' ' && ch != '\n') {
-				word += ch;
-				continue;
-			}
-			if (word) {
-				this._components.push({type: 'word', data: word, prob: Math.random()});
-				word = '';
-			}
-			this._components.push({type: 'space', data: ch});
-		}
-		// Remove trailing space.
-		this._components.pop();
-
-		this._currentComp = 0;
-		this.onProgress = null;
-		this.onTokenInfo = null;
+		this._tokens = dummyTokens(text);
+		this._loadedTokens = 0;
 
 		this._infoTimeout = null;
 		this._interval = setInterval(() => {
-			if (this._currentComp >= this._components.length) {
+			if (this._loadedTokens >= this._tokens.length) {
 				clearInterval(this._interval);
 				this._interval = null;
 				return;
 			}
-			this._currentComp++;
-			if (this.onProgress) {
-				this.onProgress();
-			}
+			this._loadedTokens++;
+			this.emit('progress');
 		}, 100);
 	}
 
@@ -51,30 +32,46 @@ class Session {
 	}
 
 	processedTokens() {
-		const words = [];
-		for (let i = 0; i < this._currentComp; ++i) {
-			words.push(this._components[i]);
+		const toks = [];
+		for (let i = 0; i < this._loadedTokens; ++i) {
+			toks.push(this._tokens[i]);
 		}
-		return words
+		return toks;
 	}
 
 	done() {
-		return this._currentComp >= this._components.length;
+		return this._loadedTokens >= this._tokens.length;
 	}
 
 	requestTokenInfo(wordIdx) {
 		const values = {
-			prob: 0.1337,
 			suggs: ['hey', 'there', 'my', 'name', 'is', 'joe'],
-			suggProbs: [0.1, 0.05, 0.03, 0.02, 0.0253, 0.01]
+			probs: [0.1, 0.05, 0.03, 0.02, 0.0253, 0.01]
 		};
 		if (this._infoTimeout) {
 			clearTimeout(this._infoTimeout);
 		}
 		this._infoTimeout = setTimeout(() => {
-			if (this.onTokenInfo) {
-				this.onTokenInfo(values);
-			}
+			this.emit('info', values)
 		}, 1000);
 	}
+}
+
+function dummyTokens(text) {
+	let word = '';
+	const comps = [];
+	for (let i = 0, len = text.length; i <= len; ++i) {
+		const ch = (i === text.length ? ' ' : text[i]);
+		if (ch != ' ' && ch != '\n') {
+			word += ch;
+			continue;
+		}
+		if (word) {
+			comps.push({type: 'word', data: word, prob: Math.random()});
+			word = '';
+		}
+		comps.push({type: 'space', data: ch});
+	}
+	comps.pop();
+	return comps;
 }

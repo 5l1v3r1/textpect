@@ -4,8 +4,10 @@ if [ ! -d node_modules ]; then
 	npm install
 fi
 
-cat src/session.js >joined.js
+cat src/eventemitter.js >joined.js
+cat src/session.js >>joined.js
 cat src/loader.js >>joined.js
+cat src/pane.js >>joined.js
 cat src/editor.js >>joined.js
 cat src/analyzer.js >>joined.js
 cat src/root.js >>joined.js

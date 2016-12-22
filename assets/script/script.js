@@ -1,41 +1,42 @@
-class Session {
+class EventEmitter {
+	constructor() {
+		this._listeners = {};
+	}
+
+	on(name, listener) {
+		const listeners = this._listeners[name];
+		if (!listeners) {
+			this._listeners[name] = [listener];
+		} else {
+			listeners.push(listener);
+		}
+	}
+
+	emit(name) {
+		const listeners = this._listeners[name];
+		const a = Array.prototype.slice.call(arguments, 1);
+		listeners.slice().forEach(f => f.apply(null, a));
+	}
+}
+class Session extends EventEmitter {
 	constructor(text) {
+		super();
+
 		// TODO: implement this for real using WebSockets
 		// and a neural network on the back-end.
 
-		this._components = [];
-
-		let word = '';
-		for (let i = 0, len = text.length; i <= len; ++i) {
-			var ch = i === text.length ? ' ' : text[i];
-			if (ch != ' ' && ch != '\n') {
-				word += ch;
-				continue;
-			}
-			if (word) {
-				this._components.push({ type: 'word', data: word, prob: Math.random() });
-				word = '';
-			}
-			this._components.push({ type: 'space', data: ch });
-		}
-		// Remove trailing space.
-		this._components.pop();
-
-		this._currentComp = 0;
-		this.onProgress = null;
-		this.onTokenInfo = null;
+		this._tokens = dummyTokens(text);
+		this._loadedTokens = 0;
 
 		this._infoTimeout = null;
 		this._interval = setInterval(() => {
-			if (this._currentComp >= this._components.length) {
+			if (this._loadedTokens >= this._tokens.length) {
 				clearInterval(this._interval);
 				this._interval = null;
 				return;
 			}
-			this._currentComp++;
-			if (this.onProgress) {
-				this.onProgress();
-			}
+			this._loadedTokens++;
+			this.emit('progress');
 		}, 100);
 	}
 
@@ -51,32 +52,48 @@ class Session {
 	}
 
 	processedTokens() {
-		const words = [];
-		for (let i = 0; i < this._currentComp; ++i) {
-			words.push(this._components[i]);
+		const toks = [];
+		for (let i = 0; i < this._loadedTokens; ++i) {
+			toks.push(this._tokens[i]);
 		}
-		return words;
+		return toks;
 	}
 
 	done() {
-		return this._currentComp >= this._components.length;
+		return this._loadedTokens >= this._tokens.length;
 	}
 
 	requestTokenInfo(wordIdx) {
 		const values = {
-			prob: 0.1337,
 			suggs: ['hey', 'there', 'my', 'name', 'is', 'joe'],
-			suggProbs: [0.1, 0.05, 0.03, 0.02, 0.0253, 0.01]
+			probs: [0.1, 0.05, 0.03, 0.02, 0.0253, 0.01]
 		};
 		if (this._infoTimeout) {
 			clearTimeout(this._infoTimeout);
 		}
 		this._infoTimeout = setTimeout(() => {
-			if (this.onTokenInfo) {
-				this.onTokenInfo(values);
-			}
+			this.emit('info', values);
 		}, 1000);
 	}
+}
+
+function dummyTokens(text) {
+	let word = '';
+	const comps = [];
+	for (let i = 0, len = text.length; i <= len; ++i) {
+		const ch = i === text.length ? ' ' : text[i];
+		if (ch != ' ' && ch != '\n') {
+			word += ch;
+			continue;
+		}
+		if (word) {
+			comps.push({ type: 'word', data: word, prob: Math.random() });
+			word = '';
+		}
+		comps.push({ type: 'space', data: ch });
+	}
+	comps.pop();
+	return comps;
 }
 function Loader(props) {
 	return React.createElement(
@@ -84,6 +101,75 @@ function Loader(props) {
 		{ className: 'loader' },
 		'Loading'
 	);
+}
+class Pane extends React.Component {
+	constructor() {
+		super();
+		this._pressHandler = e => {
+			if (e.which === 27) {
+				this.props.onClose();
+			}
+		};
+	}
+
+	componentDidMount() {
+		window.addEventListener('keydown', this._pressHandler);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('keydown', this._pressHandler);
+	}
+
+	render() {
+		let contents;
+		if (this.props.content) {
+			const list = [];
+			this.props.content.suggs.forEach((sugg, i) => {
+				const p = this.props.content.probs[i];
+				list.push(React.createElement(
+					'li',
+					{ key: i },
+					React.createElement(
+						'label',
+						{ className: 'suggestion' },
+						sugg
+					),
+					React.createElement(
+						'label',
+						{ className: 'probability' },
+						(p * 100).toFixed(2) + '%'
+					)
+				));
+			});
+			contents = React.createElement(
+				'ul',
+				null,
+				list
+			);
+		} else if (this.props.error) {
+			contents = React.createElement(
+				'label',
+				{ className: 'error' },
+				this.props.error
+			);
+		} else {
+			contents = React.createElement(Loader, null);
+		}
+		return React.createElement(
+			'div',
+			{ className: 'token-pane', onClick: this.props.onClose },
+			React.createElement(
+				'div',
+				{ className: 'pane-contents', onClick: e => e.stopPropagation() },
+				React.createElement(
+					'h1',
+					null,
+					'Alternatives'
+				),
+				contents
+			)
+		);
+	}
 }
 function Editor(props) {
 	return React.createElement(
@@ -112,38 +198,50 @@ class Analyzer extends React.Component {
 		this.state = {
 			tokens: [],
 			loading: true,
-			infoToken: null,
-			tokenInfo: null
+			error: null,
+			infoShowing: false,
+			infoContent: null,
+			infoError: null
 		};
 		this._sess = null;
 	}
 
 	componentDidMount() {
 		this._sess = new Session(this.props.text);
-		this._sess.onProgress = () => {
+		this._sess.on('progress', () => {
 			this.setState({
 				tokens: this._sess.processedTokens(),
 				loading: !this._sess.done()
 			});
-		};
-		this._sess.onTokenInfo = info => {
-			this.setState({ tokenInfo: info });
-		};
+		});
+		this._sess.on('error', err => {
+			this.setState({ error: err, loading: false });
+		});
+		this._sess.on('info', info => {
+			this.setState({ infoContent: info });
+		});
+		this._sess.on('infoError', err => {
+			this.setState({ infoError: err });
+		});
 	}
 
 	componentWillUnmount() {
 		this._sess.disconnect();
 	}
 
-	handleTokenClick(i, token) {
-		this.setState({ infoToken: token.data, tokenInfo: null });
+	handleTokenClick(i) {
+		this.setState({ infoShowing: true, infoContent: null, infoError: null });
 		this._sess.requestTokenInfo(i);
+	}
+
+	handleInfoClose() {
+		this.setState({ infoShowing: false });
 	}
 
 	render() {
 		const tokens = [];
 		this.state.tokens.forEach((item, i) => {
-			tokens.push(React.createElement(Token, { onClick: () => this.handleTokenClick(i, item),
+			tokens.push(React.createElement(Token, { onClick: () => this.handleTokenClick(i),
 				info: item, key: i }));
 		});
 		return React.createElement(
@@ -157,82 +255,30 @@ class Analyzer extends React.Component {
 			React.createElement(
 				'div',
 				{ className: 'tokens' },
+				this.state.error ? React.createElement(ErrorCover, { error: this.state.error }) : null,
 				tokens,
-				this.state.loading ? React.createElement(
-					'div',
-					{ className: 'corner-item' },
-					React.createElement(Loader, { key: 'loader' })
-				) : null
+				this.state.loading ? React.createElement(Loader, { key: 'loader' }) : null
 			),
-			React.createElement(TokenPane, { info: this.state.tokenInfo, token: this.state.infoToken,
-				onClose: () => this.setState({ infoToken: null }) })
+			this.state.infoShowing ? this.createPane() : null
 		);
+	}
+
+	createPane() {
+		return React.createElement(Pane, { content: this.state.infoContent, error: this.state.infoError,
+			onClose: () => this.handleInfoClose() });
 	}
 }
 
-class TokenPane extends React.Component {
-	constructor() {
-		super();
-		this._pressHandler = e => {
-			if (e.which === 27) {
-				this.props.onClose();
-			}
-		};
-	}
-
-	componentDidMount() {
-		window.addEventListener('keydown', this._pressHandler);
-	}
-
-	componentWillUnmount() {
-		window.removeEventListener('keydown', this._pressHandler);
-	}
-
-	render() {
-		const props = this.props;
-		if (!props.token) {
-			return null;
-		}
-		const loader = React.createElement(Loader, null);
-		const list = [];
-		if (props.info) {
-			props.info.suggs.forEach((sugg, i) => {
-				const p = props.info.suggProbs[i];
-				list.push(React.createElement(
-					'li',
-					{ key: i },
-					React.createElement(
-						'label',
-						{ className: 'suggestion' },
-						sugg
-					),
-					React.createElement(
-						'label',
-						{ className: 'probability' },
-						(p * 100).toFixed(2) + '%'
-					)
-				));
-			});
-		}
-		return React.createElement(
-			'div',
-			{ className: 'token-pane', onClick: props.onClose },
-			React.createElement(
-				'div',
-				{ className: 'pane-contents', onClick: e => e.stopPropagation() },
-				React.createElement(
-					'h1',
-					null,
-					'Alternatives'
-				),
-				!props.info ? loader : React.createElement(
-					'ul',
-					null,
-					list
-				)
-			)
-		);
-	}
+function ErrorCover(props) {
+	return React.createElement(
+		'div',
+		{ className: 'error-cover' },
+		React.createElement(
+			'label',
+			null,
+			props.error
+		)
+	);
 }
 
 function Token(props) {

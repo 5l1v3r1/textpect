@@ -28,27 +28,25 @@
 		width: @pane-width;
 		height: @pane-height;
 		text-align: left;
-
-		/* Small font prevents unwanted space around loader. */
-		font-size: 0;
-
-		& > label, & > ul {
-			font-size: 16px;
-		}
 	}
 
 	.loader {
 		position: absolute;
-		left: calc(~"50% - "(@loader-size/2));
+		left: (@pane-width - @loader-size) / 2;
+		top: (@pane-height - @loader-size) / 2;
 	}
 
-	h1 {
+	h1, .error {
 		.pane-item();
 		display: block;
 		text-align: center;
 		margin: 0;
 		padding: 0;
 		font-size: 16px;
+	}
+
+	.error {
+		color: red;
 	}
 
 	ul {
