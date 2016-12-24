@@ -40,6 +40,10 @@ func sampleWord(last byte, s rnn.State, b rnn.Block) (string, float64) {
 		out := b.ApplyBlock([]rnn.State{s}, []autofunc.Result{v})
 		s = out.States()[0]
 		ch := sampleChar(out.Outputs()[0])
+		for len(word) == 0 && (ch == ' ' || ch == '\n') {
+			ch = sampleChar(out.Outputs()[0])
+			continue
+		}
 		if ch == ' ' || ch == '\n' {
 			break
 		}
