@@ -225,8 +225,8 @@ function Editor(props) {
 	);
 }
 var MAX_UNDERLINE = 5;
-var PROB_MEAN = 0.001;
-var PROB_STD = 0.002;
+var PROB_CENTER = Math.log(0.000067);
+var PROB_SPREAD = PROB_CENTER - Math.log(0.000001);
 
 class Analyzer extends React.Component {
 	constructor() {
@@ -348,7 +348,8 @@ function Token(props) {
 function probabilityColor(prob) {
 	const posColor = [0x65, 0xbc, 0xd4];
 	const negColor = [0xf2, 0x2f, 0x21];
-	const posAmount = Math.min(1, Math.max(0, (1 + (prob - PROB_MEAN) / PROB_STD) / 2));
+	const logProb = Math.log(prob);
+	const posAmount = Math.min(1, Math.max(0, (1 + (logProb - PROB_CENTER) / PROB_SPREAD) / 2));
 	const color = [];
 	for (let i = 0; i < 3; ++i) {
 		color[i] = Math.round(posColor[i] * posAmount + negColor[i] * (1 - posAmount));
@@ -357,7 +358,7 @@ function probabilityColor(prob) {
 }
 
 function probabilityIntensity(prob) {
-	return Math.min(1, Math.abs(prob - PROB_MEAN) / PROB_STD);
+	return Math.min(1, Math.abs(Math.log(prob) - PROB_CENTER) / PROB_SPREAD);
 }
 class Root extends React.Component {
 	constructor() {

@@ -3,16 +3,19 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/unixpickle/textpect/analyzer"
 	"github.com/unixpickle/weakai/rnn"
 )
 
-var Probs []float64
+var LengthProbs = map[int][]float64{}
+var AllProbs []float64
 
 func main() {
 	if len(os.Args) != 3 {
@@ -30,43 +33,41 @@ func main() {
 	if err != nil {
 		die(err)
 	}
-	count := 0
-	sum := 0.0
-	sqSum := 0.0
 	for _, x := range listing {
 		if x.IsDir() || strings.HasPrefix(x.Name(), ".") {
 			continue
 		}
+		log.Println("Analyzing", x.Name())
 		contents, err := ioutil.ReadFile(filepath.Join(os.Args[2], x.Name()))
 		if err != nil {
 			die(err)
 		}
-		c, s, s2 := wordProbabilities(net, string(contents))
-		count += c
-		sum += s
-		sqSum += s2
+		process(net, string(contents))
 	}
-	mean := sum / float64(count)
-	variance := sqSum/float64(count) - mean*mean
-	sort.Float64s(Probs)
-	fmt.Println("Mean:", mean)
-	fmt.Println("Var:", variance)
-	fmt.Println("Median:", Probs[len(Probs)/2])
+
+	fmt.Println("Length\t\t10%     \t30%     \t50%     \t70%     \t90%")
+	LengthProbs[0] = AllProbs
+	for length := 0; length < 10; length++ {
+		p := LengthProbs[length]
+		sort.Float64s(p)
+		fl := float64(len(p))
+		fmt.Printf("%d\t\t%.6f\t%.6f\t%.6f\t%.6f\t%.6f\n", length, p[int(fl*0.1)],
+			p[int(fl*0.3)], p[int(fl*0.5)], p[int(fl*0.7)], p[int(fl*0.9)])
+	}
 }
 
-func wordProbabilities(b rnn.Block, text string) (count int, sum, sqSum float64) {
+func process(b rnn.Block, text string) {
 	a := analyzer.NewAnalyzer(b, text)
 	for !a.Done() {
+		time.Sleep(time.Second / 5)
 	}
 	for _, t := range a.Tokens() {
 		if t.Type == analyzer.Word {
-			sum += t.Probability
-			sqSum += t.Probability * t.Probability
-			count++
-			Probs = append(Probs, t.Probability)
+			AllProbs = append(AllProbs, t.Probability)
+			l := len(t.Data)
+			LengthProbs[l] = append(LengthProbs[l], t.Probability)
 		}
 	}
-	return
 }
 
 func die(args ...interface{}) {
