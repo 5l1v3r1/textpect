@@ -376,15 +376,14 @@ class Root extends React.Component {
 	}
 
 	showAnalyzer() {
+		history.replaceState(this.state, window.title, '');
 		this.setState({ editing: false }, () => {
 			history.pushState(this.state, window.title, '#analyzer');
 		});
 	}
 
 	handleTextChange(t) {
-		this.setState({ text: t }, () => {
-			history.replaceState(this.state, window.title, '');
-		});
+		this.setState({ text: t });
 	}
 
 	render() {
