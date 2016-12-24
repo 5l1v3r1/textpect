@@ -73,6 +73,16 @@ class Session extends EventEmitter {
 	}
 
 	requestTokenInfo(wordIdx) {
+		// Cancel pending token info queries.
+		for (let i = 0; i < this._queryQueue.length; ++i) {
+			if (this._queryQueue[i].obj.type === 'suggest') {
+				this._queryQueue.splice(i, 1);
+				--i;
+			}
+		}
+
+		// The token ensures that no queries trigger a callback
+		// if a newer token info query replaces them.
 		const token = Math.random();
 		this._reqToken = token;
 		this._query({ type: 'suggest', idx: wordIdx }, (err, obj) => {
