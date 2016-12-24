@@ -137,6 +137,7 @@ button:hover {
   line-height: 35px;
 }
 .token-pane .pane-contents {
+  overflow-y: auto;
   box-sizing: border-box;
   padding: 7px 0;
   background-color: white;

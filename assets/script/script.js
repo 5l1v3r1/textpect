@@ -136,8 +136,6 @@ function Loader(props) {
 		'Loading'
 	);
 }
-var MAX_SUGGESTIONS = 6;
-
 class Pane extends React.Component {
 	constructor() {
 		super();
@@ -161,9 +159,6 @@ class Pane extends React.Component {
 		if (this.props.content) {
 			const list = [];
 			this.props.content.suggs.forEach((sugg, i) => {
-				if (i >= MAX_SUGGESTIONS) {
-					return;
-				}
 				const p = this.props.content.probs[i];
 				list.push(React.createElement(
 					'li',
