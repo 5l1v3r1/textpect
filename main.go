@@ -72,7 +72,7 @@ func (h *WebsocketHandler) Handle(c *websocket.Conn) {
 		return
 	}
 	a := analyzer.NewAnalyzer(h.Block, str)
-	defer a.Done()
+	defer a.Cancel()
 
 	for {
 		var inc Incoming
