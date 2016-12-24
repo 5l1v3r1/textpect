@@ -44,10 +44,10 @@ func sampleWord(last byte, s rnn.State, b rnn.Block) (string, float64) {
 			ch = sampleChar(out.Outputs()[0])
 			continue
 		}
+		prob *= math.Exp(out.Outputs()[0][ch])
 		if ch == ' ' || ch == '\n' {
 			break
 		}
-		prob *= math.Exp(out.Outputs()[0][ch])
 		word += string(byte(ch))
 		lastIn = make(linalg.Vector, 0x100)
 		lastIn[ch] = 1
