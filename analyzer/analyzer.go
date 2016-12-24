@@ -107,13 +107,15 @@ func (a *Analyzer) analyze(text string) {
 		lastChar = make(linalg.Vector, 0x100)
 		lastChar[int(x)] = 1
 
-		if x != ' ' && x != '\n' && x != '\r' && x != 0 {
+		if x != ' ' && x != '\n' && x != 0 {
 			probability *= charProb
 			word += string(x)
 			continue
 		}
 
 		if len(word) > 0 {
+			probability *= math.Exp(output.Outputs()[0][' ']) +
+				math.Exp(output.Outputs()[0]['\n'])
 			a.tokenLock.Lock()
 			a.tokens = append(a.tokens, &Token{
 				Type:        Word,
