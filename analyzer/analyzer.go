@@ -109,7 +109,7 @@ func (a *Analyzer) analyze(text string) {
 
 		if x != ' ' && x != '\n' && x != 0 {
 			probability *= charProb
-			word += string(x)
+			word += string([]byte{x})
 			continue
 		}
 
